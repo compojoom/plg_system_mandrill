@@ -542,6 +542,7 @@ class JMail extends PHPMailer
 				//
 				$mime_type = $this->detectMimeType($attachment[1]);
 				if(!$mime_type) {
+					$this->writeToLog(JText::sprintf('PLG_SYSTEM_MANDRILL_UNSUPPORTED_ATTACHMENT', $attachment[2], $mime_type));
 					// if one of the files is not an image/txt or pdf, then use standard phpmailer
 					// the mandrill api doesn't support other formats right now
 					$this->phpMailerSend();
