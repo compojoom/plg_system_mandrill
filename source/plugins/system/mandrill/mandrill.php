@@ -32,7 +32,7 @@ class plgSystemMandrill extends JPlugin
 			JLoader::load('JMail');
 
 		} else {
-			return JError::raiseWarning(500, JText::_('PLG_SYSTEM_MANDRILL_NO_APIKEY_SPECIFIED'));
+			return JError::raiseWarning(500, JText::_('PLG_SYSTEM_MANDRILL_NO_API_KEY_SPECIFIED'));
 		}
 	}
 

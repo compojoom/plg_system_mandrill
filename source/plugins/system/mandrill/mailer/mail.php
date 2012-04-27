@@ -69,10 +69,15 @@ class JMail extends PHPMailer
 		// phpmailer has an issue using the relative path for it's language files
 		$this->SetLanguage('joomla', JPATH_PLATFORM . '/phpmailer/language/');
 
-		jimport('joomla.error.log');
-		// Get the date.
-		$date = JFactory::getDate()->format('Y_m');
+		// load the admin language
+		$language = JFactory::getLanguage();
+		$language->load('plg_system_mandrill.sys', JPATH_ADMINISTRATOR, 'en-GB', true);
+		$language->load('plg_system_mandrill.sys', JPATH_ADMINISTRATOR, $language->getDefault(), true);
+		$language->load('plg_system_mandrill.sys', JPATH_ADMINISTRATOR, null, true);
 
+		// initialize the logger class
+		jimport('joomla.error.log');
+		$date = JFactory::getDate()->format('Y_m');
 		// Add the logger.
 		JLog::addLogger(
 			array(
@@ -147,7 +152,7 @@ class JMail extends PHPMailer
 
 		if ((int)$dailyQuota <= (int)$sentToday) {
 
-			$this->writeToLog('Daily message quota exceeded. Quota: ' . (int)$dailyQuota . ' Sent: ' . (int)$sentToday);
+			$this->writeToLog( JText::sprintf('PLG_SYSTEM_MANDRILL_DAILY_QUOTA_EXCEEDED' ,(int)$dailyQuota, (int)$sentToday));
 
 			return true;
 		}
@@ -229,14 +234,14 @@ class JMail extends PHPMailer
 			}
 
 			if (count($status['queue'])) {
-				$this->writeToLog('Emailing to ' . imploded(',', $status['queue']) . 'was queued by Mandrill. Trying to send the mail using phpMailer');
+				$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_QUEUED', imploded(',', $status['queue'])));
 			}
 
 			// if we have rejected emails - try to send them with phpMailer
 			// not a perfect solution because we will return the result form phpMailer instead of the Mandrill
 			// but better to try to deliver agian than to fail to send the message
 			if (count($status['rejected'])) {
-				$this->writeToLog('Emailing to ' . imploded(',', $status['rejected']) . 'was rejected by Mandrill. Trying to send the mail using phpMailer');
+				$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_REJECTED',imploded(',', $status['rejected'])));
 				$this->ClearAddresses();
 				$this->addRecipient($rejected);
 				return $this->phpMailerSend();
