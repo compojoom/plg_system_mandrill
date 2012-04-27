@@ -533,6 +533,27 @@ class JMail extends PHPMailer
 	private function mandrillSend()
 	{
 
+		$attachments = $this->GetAttachments();
+		if(count($attachments) > 0) {
+
+			foreach($attachments as $attachment) {
+				// a lot of people are setting wrong mime_type when using the addAtachment function
+				// let us try to determine the mime_type ourselves on the base of the filename
+				//
+				$mime_type = $this->detectMimeType($attachment[1]);
+				if(!$mime_type) {
+					// if one of the files is not an image/txt or pdf, then use standard phpmailer
+					// the mandrill api doesn't support other formats right now
+					$this->phpMailerSend();
+				};
+				$mAttachments[] = array(
+					'name' => $attachment[2],
+					'type' => $mime_type,
+					'content' => $this->EncodeFile($attachment[0])
+				);
+			}
+		}
+
 		$mandrill = new stdClass();
 		$mandrill->key = $this->apiKey;
 		$mandrill->message = array(
@@ -540,6 +561,11 @@ class JMail extends PHPMailer
 			'from_email' => $this->From,
 			'from_name' => $this->FromName
 		);
+
+		if(count($mAttachments)) {
+			$mandrill->message['attachments'] = $mAttachments;
+		}
+
 
 		// let us set some tags
 		$input = JFactory::getApplication()->input;
@@ -616,14 +642,14 @@ class JMail extends PHPMailer
 		}
 
 		// queued mails??? Hm, maybe we've reached the API limit. Let us log this
-		if (count($status['queue'])) {
+		if (isset($status['queue']) && count($status['queue'])) {
 			$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_QUEUED', imploded(',', $status['queue'])));
 		}
 
 		// if we have rejected emails - try to send them with phpMailer
 		// not a perfect solution because we will return the result form phpMailer instead of the Mandrill
 		// but better to try to deliver agian than to fail to send the message
-		if (count($status['rejected'])) {
+		if (isset($status['rejected']) && count($status['rejected'])) {
 			$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_REJECTED',imploded(',', $status['rejected'])));
 			$this->ClearAddresses();
 			$this->addRecipient($status['rejected']);
@@ -631,13 +657,46 @@ class JMail extends PHPMailer
 		}
 
 		// let us hope that we always come so far!
-		if (count($status['sent'])) {
+		if (isset($status['sent']) && count($status['sent'])) {
 			return true;
 		}
 
 		return false;
 	}
 
+	private function detectMimeType($filename) {
+		$mime_types = array(
+
+			'txt' => 'text/plain',
+			'htm' => 'text/html',
+			'html' => 'text/html',
+			'php' => 'text/html',
+			'css' => 'text/css',
+
+			// images
+			'png' => 'image/png',
+			'jpe' => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'jpg' => 'image/jpeg',
+			'gif' => 'image/gif',
+			'bmp' => 'image/bmp',
+			'ico' => 'image/vnd.microsoft.icon',
+			'tiff' => 'image/tiff',
+			'tif' => 'image/tiff',
+			'svg' => 'image/svg+xml',
+			'svgz' => 'image/svg+xml',
+
+			// adobe
+			'pdf' => 'application/pdf'
+			);
+
+		$ext = strtolower(array_pop(explode('.',$filename)));
+		if (array_key_exists($ext, $mime_types)) {
+			return $mime_types[$ext];
+		}
+
+		return false;
+	}
 	/**
 	 *
 	 * @param $message
