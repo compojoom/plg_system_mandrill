@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<book>
+  <bookinfo>
+    <title>Mandrill Plugin for Joomla!™ User's Guide</title>
+
+    <author>
+      <firstname>Daniel</firstname>
+
+      <surname>Dimitrov</surname>
+
+      <affiliation>
+        <orgname>compojoom.com</orgname>
+      </affiliation>
+    </author>
+
+    <pubdate>27.04z.2012</pubdate>
+
+    <legalnotice>
+      <para>Permission is granted to copy, distribute and/or modify this
+      document under the terms of the GNU Free Documentation License, Version
+      1.3 or any later version published by the Free Software Foundation; with
+      no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A
+      copy of the license is included in the appendix entitled "The GNU Free
+      Documentation License".</para>
+    </legalnotice>
+
+    <abstract>
+      <para>This book covers the use of the Mandrill plugin for Joomla. It
+      does not cover any other extension available on compojoom.com .</para>
+    </abstract>
+  </bookinfo>
+
+  <chapter>
+    <title>Introduction</title>
+
+    <section>
+      <title>Introducing Mandrillapp.com</title>
+
+      <para>In April 2012 Mailchimp (<link
+      linkend="???">http://mailchimp.com</link>) introduced a new
+      transactional email service called Mandrill (<link
+      linkend="???">http://mandrillapp.com</link>). Mandrill is using the same
+      optimized delivery engine that MailChimp uses for the delivery of bulk
+      newsletters – slightly modified for one-to-one email. The core features
+      of Mandrill are:</para>
+
+      <para><itemizedlist>
+          <listitem>
+            <para>Uses MailChimp's awesome email delivery engine</para>
+          </listitem>
+
+          <listitem>
+            <para>Tracks opens and clicks</para>
+          </listitem>
+
+          <listitem>
+            <para>Automatically adds Google Analytics tracking data to the
+            URLs in the mail</para>
+          </listitem>
+
+          <listitem>
+            <para>Has pretty, visual reports of the email results</para>
+          </listitem>
+
+          <listitem>
+            <para>Allows you to tag the emails and see your stats filtered by
+            tag</para>
+          </listitem>
+        </itemizedlist></para>
+    </section>
+
+    <section>
+      <title>Introducing Mandrill Plugin for Joomla</title>
+
+      <para>Since you normally need to be a programmy nerd to use the service
+      MailChimp asked us to create an integration for Mandrill's API into
+      Joomla. And there you have it! You'll just need to provide your Mandrill
+      API key and enable the plugin - after that all e-mails* send by Joomla
+      are going to be sent trough the Mandrill API.</para>
+
+      <para>* All extensions that use the standard Joomla API for sending
+      mails will continue to function as normal and the mails will be send
+      trough Joomla. If you are using extensions that have their own Mail
+      classes, then those extensions will continue to function as normal, but
+      they won't use the Mandrill API </para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Installation and Updates</title>
+
+    <para>Installing the Mandrill plugin for Joomla is easy it is not in any
+    way different than installing any other Joomla!™ extension/module/plugin
+    on your site. You can read the complete instructions for installing
+    Joomla!™ extensions on the <ulink
+    url="http://help.joomla.org/content/view/1476/235/">official joomla help
+    page</ulink> .Throughout this chapter we assume that you are familiar with
+    these instructions and we will not duplicate them.</para>
+
+    <section>
+      <title>Getting the installation packages</title>
+
+      <para>You can download the latest installation packages by visiting our
+      site at <ulink
+      url="https://compojoom.com">https://compojoom.com</ulink>. (you need to
+      be login) In the download menu you will see the Mandrill menu item.
+      Click on it. The latest releases are listed with the newest release
+      always on top. Click on the release number and then download the ZIP
+      package.</para>
+
+      <section>
+        <title>Compatibility</title>
+
+        <para>The Mandrill Plugin for Joomla is compatible with Joomla
+        2.5</para>
+      </section>
+    </section>
+
+    <section>
+      <title>Updating to the latest version</title>
+
+      <para>The plugin uses the standard update routine in Joomla. All you
+      need to do is to go Extensions -&gt; Extension Manager -&gt; Update in
+      your Joomla backend. Then click on "Find Updates" if a new version of
+      the plugin is available you will be able to update by selecting it and
+      clicking on the "Update" button</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Using the Mandrill Plugin for Joomla</title>
+
+    <para>To manage the plugin go to your Extension - Plugin manager and find
+    the "System - Mandrill" plugin. Select the plugin and click on the "Edit"
+    option on the top right of your screen. After that you should presented
+    with a screen similar to this one:</para>
+
+    <para><graphic fileref="images/config_screen.PNG" width="0"/></para>
+
+    <para>In the API key field provide your Mandrill API key (on the day of
+    writing of that documentation the API key could be found by clicking on
+    the settings button (top right) the mandrillapp.com page (you need to be
+    logged in to see it))</para>
+
+    <para>The use https option defines if the plugin should communicate with
+    Mandrill server through an SSL connection or not. We recommend to set this
+    option to yes if your hosting has the necessary php ssl libraries for
+    this. </para>
+
+    <para>Once you've provided a valid API key, you can enable the plugin.
+    That's it! now your Joomla site should be sending e-mails using the
+    Mandrill API. You can test this by going to "users -&gt; mass mail" then
+    try to send a mail to your Super users. The mail that your super users are
+    going to receive should be comming from the Mandrill servers. </para>
+
+    <para> </para>
+
+    <note>
+      <para>When you send a mass mail the user that sends the mail won't
+      receive a mail. This is the way the "Mass Mail" extension works in
+      Joomla and has nothing to do with the Mandrill plugin</para>
+    </note>
+  </chapter>
+
+  <chapter>
+    <title>Good to know</title>
+
+    <section>
+      <title>Sending limits</title>
+
+      <para>Depending on your Mandrill account there are different sending
+      limits that apply for you. If you are a free user then this limit is
+      currently 12 000 emails per month. For more information on sending
+      limits please refer to <ulink
+      url="http://help.mandrill.com/customer/portal/articles/464936-mailchimp-bundled-pricing">Mandrill's
+      help pages</ulink>.</para>
+
+      <para>The current implementation of the plugin checks how many emals you
+      have send for the day and how big your sending limit is. If you have
+      reached your sending e-mail then the plugin will fall back to the
+      standard JMailer class and will send the mails according to the settings
+      that you have specified in your Global Configuration (Joomla's global
+      configuration. Accessible through Site -&gt; Global Configuration -&gt;
+      Server -&gt; Mail Settings) </para>
+    </section>
+
+    <section>
+      <title>CC emails</title>
+
+      <para>If a Joomla extension tries to send and ads the CC option to the
+      mail, then the plugin will fallback to the standard JMailer class and
+      won't use the Mandrill API.</para>
+    </section>
+
+    <section>
+      <title>What happens with rejected mails?</title>
+
+      <para>In some situations the Mandrill API won't send the mail and will
+      return a rejected status for it. In this case the plugin will try to
+      send the mail to the recipient again, but this time using the standard
+      JMailer class. </para>
+    </section>
+
+    <section>
+      <title>Logging</title>
+
+      <para>The plugin uses the standard Joomla JLog class to log errors and
+      warnings. The logs are saved in the folder configured in your Joomla's
+      Global Configuration. The logs are splitted by Month. You can expect
+      them to identify situations in which the plugin was not able to send the
+      email using Mandrill's API and has fallen back to the standard JMailer
+      class.</para>
+
+      <section>
+        <title>Events logged</title>
+
+        <para>The plugin logs following events:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>Use of CC option for sending emails</para>
+          </listitem>
+
+          <listitem>
+            <para>Daily sending quota exceeded</para>
+          </listitem>
+
+          <listitem>
+            <para>Queued messages</para>
+          </listitem>
+
+          <listitem>
+            <para>Rejected messages</para>
+          </listitem>
+        </itemizedlist>
+      </section>
+    </section>
+
+    <section>
+      <title>Tags</title>
+
+      <para>For each Mail we try to add the following tags:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>option - identifies the Joomla component sending the
+          email</para>
+        </listitem>
+
+        <listitem>
+          <para>view - identifies the view of the component sending the
+          mail</para>
+        </listitem>
+
+        <listitem>
+          <para>task - identifies the task that is executed by the component
+          sending the mail</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Each of this tags is added only if we are able to identify
+      it.</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Support</title>
+
+    <para>The Mandrill Plugin for Joomla is released free of charge. Community
+    support is available in our Forum in the Mandrill section. </para>
+  </chapter>
+</book>
