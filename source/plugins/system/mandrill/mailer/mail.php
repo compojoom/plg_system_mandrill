@@ -553,7 +553,6 @@ class JMail extends PHPMailer
 			$mandrill->message['tags'][] = $input->get('option');
 		}
 
-
 		if (count($this->ReplyTo) > 0) {
 			$replyTo = array_keys($this->ReplyTo);
 			$mandrill->message['headers'] = array('Reply-To' => $replyTo[0]);
@@ -569,61 +568,72 @@ class JMail extends PHPMailer
 		$mandrill->message['track_opens'] = true;
 		$mandrill->message['track_clicks'] = true;
 
-		foreach ($this->to as $value) {
+		$recipients = $this->to;
+
+//		let us merge the bcc recipients with the to recipients. the Mandrill API
+//		will send an individual mail to everyone
+		if(count($this->bcc) > 0) {
+			$recipients = array_merge($recipients, $this->bcc);
+		}
+		foreach ($recipients as $value) {
 			$to[] = array(
 				'email' => $value[0],
 				'name' => $value[1]
 			);
 		}
 
-		$mandrill->message['to'] = $to;
+		// if we have more than 1000 recipients, let us send this in chunks
+		$to = array_chunk($to, 1000);
+		$status = array();
+		foreach($to as $value) {
+			$mandrill->message['to'] = $value;
 
-		$url = $this->getMandrillUrl() . '/messages/send.json';
+			$url = $this->getMandrillUrl() . '/messages/send.json';
 
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($mandrill));
+			curl_setopt($ch, CURLOPT_POST, 1);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($mandrill));
 
-		if ($this->params->get('secure')) {
-			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
-		}
-
-		$data = json_decode(curl_exec($ch));
-
-		curl_close($ch);
-
-		// check if we have have a correct response
-		if (is_array($data)) {
-			$rejected = array();
-			foreach ($data as $value) {
-				$status[$value->status][] = array($value->email, '');
+			if ($this->params->get('secure')) {
+				curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
 			}
 
-			if (count($status['queue'])) {
-				$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_QUEUED', imploded(',', $status['queue'])));
-			}
+			$data = json_decode(curl_exec($ch));
 
-			// if we have rejected emails - try to send them with phpMailer
-			// not a perfect solution because we will return the result form phpMailer instead of the Mandrill
-			// but better to try to deliver agian than to fail to send the message
-			if (count($status['rejected'])) {
-				$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_REJECTED',imploded(',', $status['rejected'])));
-				$this->ClearAddresses();
-				$this->addRecipient($rejected);
-				return $this->phpMailerSend();
-			}
+			curl_close($ch);
 
-			// let us hope that we always come so far!
-			if (count($status['sent'])) {
-				return true;
+			// check if we have have a correct response
+			if (is_array($data)) {
+				foreach ($data as $value) {
+					$status[$value->status][] = array($value->email, '');
+				}
 			}
 		}
 
+		// queued mails??? Hm, maybe we've reached the API limit. Let us log this
+		if (count($status['queue'])) {
+			$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_QUEUED', imploded(',', $status['queue'])));
+		}
+
+		// if we have rejected emails - try to send them with phpMailer
+		// not a perfect solution because we will return the result form phpMailer instead of the Mandrill
+		// but better to try to deliver agian than to fail to send the message
+		if (count($status['rejected'])) {
+			$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_REJECTED',imploded(',', $status['rejected'])));
+			$this->ClearAddresses();
+			$this->addRecipient($status['rejected']);
+			return $this->phpMailerSend();
+		}
+
+		// let us hope that we always come so far!
+		if (count($status['sent'])) {
+			return true;
+		}
 
 		return false;
 	}
