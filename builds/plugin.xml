@@ -21,6 +21,8 @@
         <!--do we have a media folder?-->
         <available file="${dirs.source}\media\${plugin}"
                    type="dir" property="mod.media.exist" value="yes"/>
+        <available file="${dirs.source}\administrator\language\"
+                   type="dir" property="adminLang.exist" value="yes"/>
 
         <if>
             <equals arg1="${adminLang.exist}" arg2="1"/>
