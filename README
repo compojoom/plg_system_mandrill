@@ -1,0 +1,7 @@
+Mandrill Plugin for Joomla
+
+This plugin allows Joomla! to send transactional Emails using the Mandrill API (http://mandrillapp.com)
+
+If you want to build it yourself check the phing build scripts
+
+If you want a copy of the final product - visit compojoom.com and get the download
