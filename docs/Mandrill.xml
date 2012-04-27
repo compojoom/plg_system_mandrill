@@ -15,7 +15,7 @@
       </affiliation>
     </author>
 
-    <pubdate>27.04z.2012</pubdate>
+    <pubdate>27.04.2012</pubdate>
 
     <legalnotice>
       <para>Permission is granted to copy, distribute and/or modify this
@@ -84,7 +84,7 @@
       mails will continue to function as normal and the mails will be send
       trough Joomla. If you are using extensions that have their own Mail
       classes, then those extensions will continue to function as normal, but
-      they won't use the Mandrill API </para>
+      they won't use the Mandrill API</para>
     </section>
   </chapter>
 
@@ -147,15 +147,13 @@
     <para>The use https option defines if the plugin should communicate with
     Mandrill server through an SSL connection or not. We recommend to set this
     option to yes if your hosting has the necessary php ssl libraries for
-    this. </para>
+    this.</para>
 
     <para>Once you've provided a valid API key, you can enable the plugin.
     That's it! now your Joomla site should be sending e-mails using the
     Mandrill API. You can test this by going to "users -&gt; mass mail" then
     try to send a mail to your Super users. The mail that your super users are
-    going to receive should be comming from the Mandrill servers. </para>
-
-    <para> </para>
+    going to receive should be comming from the Mandrill servers.</para>
 
     <note>
       <para>When you send a mass mail the user that sends the mail won't
@@ -183,7 +181,7 @@
       standard JMailer class and will send the mails according to the settings
       that you have specified in your Global Configuration (Joomla's global
       configuration. Accessible through Site -&gt; Global Configuration -&gt;
-      Server -&gt; Mail Settings) </para>
+      Server -&gt; Mail Settings)</para>
     </section>
 
     <section>
@@ -200,7 +198,7 @@
       <para>In some situations the Mandrill API won't send the mail and will
       return a rejected status for it. In this case the plugin will try to
       send the mail to the recipient again, but this time using the standard
-      JMailer class. </para>
+      JMailer class.</para>
     </section>
 
     <section>
@@ -234,6 +232,10 @@
           <listitem>
             <para>Rejected messages</para>
           </listitem>
+
+          <listitem>
+            <para>Unsupported attachments</para>
+          </listitem>
         </itemizedlist>
       </section>
     </section>
@@ -263,12 +265,21 @@
       <para>Each of this tags is added only if we are able to identify
       it.</para>
     </section>
+
+    <section>
+      <title>Attachments</title>
+
+      <para>Currently the Mandrill API supports only attachments with the mime
+      type image/*, text/* and application/pdf. If your joomla site is sending
+      emails that contain other attachments, then the plugin will recognise
+      this and will fallback to the standard JMailer class.</para>
+    </section>
   </chapter>
 
   <chapter>
     <title>Support</title>
 
     <para>The Mandrill Plugin for Joomla is released free of charge. Community
-    support is available in our Forum in the Mandrill section. </para>
+    support is available in our Forum in the Mandrill section.</para>
   </chapter>
 </book>
