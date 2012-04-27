@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="2.5" type="plugin" group="system">
+	<name>plg_system_mandrill</name>
+	<author>Daniel Dimitrov</author>
+	<creationDate>April 2009</creationDate>
+	<copyright>Copyright (C) 2005 - 2012 Open Source Matters. All rights reserved.</copyright>
+	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+	<authorEmail>daniel@compojoom.com</authorEmail>
+	<authorUrl>https://compojoom.com</authorUrl>
+	<version>2.5.0</version>
+	<description>PLG_SYSTEM_MANDRILL_DESC</description>
+	<files>
+		<filename plugin="redirect">redirect.php</filename>
+		<filename>index.html</filename>
+	</files>
+	<languages folder="administrator/language">
+		<language tag="en-GB">en-GB.plg_system_mandrill.ini</language>
+		<language tag="en-GB">en-GB.plg_system_mandrill.sys.ini</language>
+	</languages>
+
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+                <field name="apiKey" type="text" default="" size="50" label="ApiKey" description="Your mailchimp API key"/>
+                <field name="secure" type="radio" default="0" label="Use https" description="Use a secure connection to send the mails?">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </field>
+            </fieldset>
+        </fields>
+    </config>
+
+</extension>
