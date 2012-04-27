@@ -3,22 +3,12 @@
 /**
  * @author Daniel Dimitrov - http://compojoom.com
  *
- * This file is part of Freakedout Mailchimp STS integration.
- * It is a modified version of the standard Joomla JMail class
+ * This is a modified version of the JMailer Class that works with
+ * the Mandrill API
  *
- * Fmsts is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Fmsts is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Fmsts.  If not, see <http://www.gnu.org/licenses/>.
+ * @license        GNU/GPL, see LICENSE.php
  */
+
 /**
  * @version        $Id: mail.php 14401 2010-01-26 14:10:00Z louis $
  * @package        Joomla.Framework
@@ -38,20 +28,18 @@ jimport('phpmailer.phpmailer');
 jimport('joomla.mail.helper');
 
 /**
- * E-Mail Class.  Provides a common interface to send e-mail from the Joomla! Framework
+ * Email Class.  Provides a common interface to send email from the Joomla! Platform
  *
- * @package     Joomla.Framework
- * @subpackage        Mail
- * @since        1.5
+ * @package     Joomla.Platform
+ * @subpackage  Mail
+ * @since       11.1
  */
 class JMail extends PHPMailer
 {
-
-	private $apiKey = null;
-	public $to = array();
-	public $cc = array();
-	public $bcc = array();
-	public $attachment = array();
+	/**
+	 * @var    array  JMail instances container.
+	 * @since  11.3
+	 */
 	protected static $instances = array();
 
 	/**
@@ -85,7 +73,6 @@ class JMail extends PHPMailer
 			)
 
 		);
-
 
 	}
 
@@ -122,139 +109,6 @@ class JMail extends PHPMailer
 		} else {
 			return $this->phpMailerSend();
 		}
-	}
-
-	private function isDailyQuotaExeeded()
-	{
-		$url = $this->getMandrillUrl() . '/users/info.json';
-
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('key' => $this->apiKey)));
-
-		if ($this->params->get('secure')) {
-			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
-		}
-
-		$result = curl_exec($ch);
-		curl_close($ch);
-		$data = json_decode($result);
-
-		$dailyQuota = $data->hourly_quota * 24;
-
-		$sentToday = $data->stats->today->sent;
-
-
-		if ((int)$dailyQuota <= (int)$sentToday) {
-
-			$this->writeToLog( JText::sprintf('PLG_SYSTEM_MANDRILL_DAILY_QUOTA_EXCEEDED' ,(int)$dailyQuota, (int)$sentToday));
-
-			return true;
-		}
-		return false;
-	}
-
-	private function mandrillSend()
-	{
-
-		$mandrill = new stdClass();
-		$mandrill->key = $this->apiKey;
-		$mandrill->message = array(
-			'subject' => $this->Subject,
-			'from_email' => $this->From,
-			'from_name' => $this->FromName
-		);
-
-		// let us set some tags
-		$input = JFactory::getApplication()->input;
-		if ($input->get('option')) {
-			$mandrill->message['tags'][] = $input->get('option');
-		}
-		if ($input->get('view')) {
-			$mandrill->message['tags'][] = $input->get('view');
-		}
-		if ($input->get('task')) {
-			$mandrill->message['tags'][] = $input->get('option');
-		}
-
-
-		if (count($this->ReplyTo) > 0) {
-			$replyTo = array_keys($this->ReplyTo);
-			$mandrill->message['headers'] = array('Reply-To' => $replyTo[0]);
-		}
-
-		if ($this->ContentType == 'text/plain') {
-			$mandrill->message['text'] = $this->Body;
-		} else {
-			$mandrill->message['html'] = $this->Body;
-			$message['auto_text'] = true;
-		}
-
-		$mandrill->message['track_opens'] = true;
-		$mandrill->message['track_clicks'] = true;
-
-		foreach ($this->to as $value) {
-			$to[] = array(
-				'email' => $value[0],
-				'name' => $value[1]
-			);
-		}
-
-		$mandrill->message['to'] = $to;
-
-		$url = $this->getMandrillUrl() . '/messages/send.json';
-
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($mandrill));
-
-		if ($this->params->get('secure')) {
-			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
-		}
-
-		$data = json_decode(curl_exec($ch));
-
-		curl_close($ch);
-
-		// check if we have have a correct response
-		if (is_array($data)) {
-			$rejected = array();
-			foreach ($data as $value) {
-				$status[$value->status][] = array($value->email, '');
-			}
-
-			if (count($status['queue'])) {
-				$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_QUEUED', imploded(',', $status['queue'])));
-			}
-
-			// if we have rejected emails - try to send them with phpMailer
-			// not a perfect solution because we will return the result form phpMailer instead of the Mandrill
-			// but better to try to deliver agian than to fail to send the message
-			if (count($status['rejected'])) {
-				$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_REJECTED',imploded(',', $status['rejected'])));
-				$this->ClearAddresses();
-				$this->addRecipient($rejected);
-				return $this->phpMailerSend();
-			}
-
-			// let us hope that we always come so far!
-			if (count($status['sent'])) {
-				return true;
-			}
-		}
-
-
-		return false;
 	}
 
 	private function phpMailerSend()
@@ -465,83 +319,6 @@ class JMail extends PHPMailer
 	}
 
 	/**
-	 * This function is a copy of the PHPMailer 5.1 function AddAnAddress
-	 * We need to call it also in this class, because otherwise we don't have
-	 * access to the private to, cc and bcc variables... We don't need to change
-	 * the method name as phpmailer has declared AddAnAddress as private and it
-	 * is in different scope.
-	 *
-	 * Adds an address to one of the recipient arrays
-	 * Addresses that have been added already return false, but do not throw exceptions
-	 * @param string $kind One of 'to', 'cc', 'bcc', 'ReplyTo'
-	 * @param string $address The email address to send to
-	 * @param string $name
-	 * @return boolean true on success, false if address already used or invalid in some way
-	 * @access private
-	 */
-//	private function AddAnAddress($kind, $address, $name = '')
-//	{
-//		if (!preg_match('/^(to|cc|bcc|ReplyTo)$/', $kind)) {
-//			echo 'Invalid recipient array: ' . kind;
-//			return false;
-//		}
-//		$address = trim($address);
-//		$name = trim(preg_replace('/[\r\n]+/', '', $name)); //Strip breaks and trim
-//		if (!self::ValidateAddress($address)) {
-//			$this->SetError($this->Lang('invalid_address') . ': ' . $address);
-//			if ($this->exceptions) {
-//				throw new phpmailerException($this->Lang('invalid_address') . ': ' . $address);
-//			}
-//			echo $this->Lang('invalid_address') . ': ' . $address;
-//			return false;
-//		}
-//		if ($kind != 'ReplyTo') {
-//			if (!isset($this->all_recipients[strtolower($address)])) {
-//				array_push($this->$kind, array($address, $name));
-//				$this->all_recipients[strtolower($address)] = true;
-//				return true;
-//			}
-//		} else {
-//			if (!array_key_exists(strtolower($address), $this->ReplyTo)) {
-//				$this->ReplyTo[strtolower($address)] = array($address, $name);
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
-
-//	/**
-//	 * This method is not implemented in Mailchimp's STS, so we just log the attempt to add an attachment
-//	 *
-//	 * @access public
-//	 * @param mixed $attachment Either a string or array of strings [filenames]
-//	 * @return void
-//	 * @since 1.5
-//	 */
-//	public function addAttachment($attachment)
-//	{
-//		$message = 'The addAttachment method is not supported by Mailchimp\'s STS API. We will send this mail using PHPMailer';
-//		// If the file attachments is an aray, add each file... otherwise just add the one
-//		if (isset($attachment)) {
-//			if (is_array($attachment)) {
-//				foreach ($attachment as $file) {
-//					parent::AddAttachment($file);
-//					$this->AddAttachmentJMail($file);
-//
-//					$this->writeToLog($message);
-//				}
-//			} else {
-//				parent::AddAttachment($file);
-//				$this->AddAttachmentJMail($file);
-//				$this->writeToLog($message);
-//			}
-//		}
-//
-//		return $this;
-//
-//	}
-
-	/**
 	 * Add Reply to email address(es) to the email
 	 *
 	 * @param   array  $replyto  Either an array or multi-array of form
@@ -636,47 +413,7 @@ class JMail extends PHPMailer
 		}
 	}
 
-//	/**
-//	 *
-//	 * @return string - the datacenter to use from the apiKey
-//	 */
-//	private function getDataCenter()
-//	{
-//		$dc = "us1";
-//		if (strstr($this->apiKey, "-")) {
-//			list($key, $dc) = explode("-", $this->apiKey, 2);
-//			if (!$dc)
-//				$dc = "us1";
-//		}
-//
-//		return $dc;
-//	}
 
-	/**
-	 * @return string - the url to mailchimp api
-	 */
-	private function getMandrillUrl()
-	{
-
-		$scheme = 'http';
-
-		if ($this->params->get('secure')) {
-			$scheme = 'https';
-		}
-
-		$url = $scheme . '://mandrillapp.com/api/1.0';
-
-		return $url;
-	}
-
-	/**
-	 *
-	 * @param $message
-	 */
-	private function writeToLog($message)
-	{
-		JLog::add($message, JLog::WARNING);
-	}
 
 	/**
 	 * Function to send an email
@@ -756,6 +493,165 @@ class JMail extends PHPMailer
 		$this->setBody($message);
 
 		return $this->Send();
+	}
+
+	private function isDailyQuotaExeeded()
+	{
+		$url = $this->getMandrillUrl() . '/users/info.json';
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('key' => $this->apiKey)));
+
+		if ($this->params->get('secure')) {
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
+		}
+
+		$result = curl_exec($ch);
+		curl_close($ch);
+		$data = json_decode($result);
+
+		$dailyQuota = $data->hourly_quota * 24;
+
+		$sentToday = $data->stats->today->sent;
+
+
+		if ((int)$dailyQuota <= (int)$sentToday) {
+
+			$this->writeToLog( JText::sprintf('PLG_SYSTEM_MANDRILL_DAILY_QUOTA_EXCEEDED' ,(int)$dailyQuota, (int)$sentToday));
+
+			return true;
+		}
+		return false;
+	}
+
+	private function mandrillSend()
+	{
+
+		$mandrill = new stdClass();
+		$mandrill->key = $this->apiKey;
+		$mandrill->message = array(
+			'subject' => $this->Subject,
+			'from_email' => $this->From,
+			'from_name' => $this->FromName
+		);
+
+		// let us set some tags
+		$input = JFactory::getApplication()->input;
+		if ($input->get('option')) {
+			$mandrill->message['tags'][] = $input->get('option');
+		}
+		if ($input->get('view')) {
+			$mandrill->message['tags'][] = $input->get('view');
+		}
+		if ($input->get('task')) {
+			$mandrill->message['tags'][] = $input->get('option');
+		}
+
+
+		if (count($this->ReplyTo) > 0) {
+			$replyTo = array_keys($this->ReplyTo);
+			$mandrill->message['headers'] = array('Reply-To' => $replyTo[0]);
+		}
+
+		if ($this->ContentType == 'text/plain') {
+			$mandrill->message['text'] = $this->Body;
+		} else {
+			$mandrill->message['html'] = $this->Body;
+			$message['auto_text'] = true;
+		}
+
+		$mandrill->message['track_opens'] = true;
+		$mandrill->message['track_clicks'] = true;
+
+		foreach ($this->to as $value) {
+			$to[] = array(
+				'email' => $value[0],
+				'name' => $value[1]
+			);
+		}
+
+		$mandrill->message['to'] = $to;
+
+		$url = $this->getMandrillUrl() . '/messages/send.json';
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($mandrill));
+
+		if ($this->params->get('secure')) {
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
+		}
+
+		$data = json_decode(curl_exec($ch));
+
+		curl_close($ch);
+
+		// check if we have have a correct response
+		if (is_array($data)) {
+			$rejected = array();
+			foreach ($data as $value) {
+				$status[$value->status][] = array($value->email, '');
+			}
+
+			if (count($status['queue'])) {
+				$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_QUEUED', imploded(',', $status['queue'])));
+			}
+
+			// if we have rejected emails - try to send them with phpMailer
+			// not a perfect solution because we will return the result form phpMailer instead of the Mandrill
+			// but better to try to deliver agian than to fail to send the message
+			if (count($status['rejected'])) {
+				$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_REJECTED',imploded(',', $status['rejected'])));
+				$this->ClearAddresses();
+				$this->addRecipient($rejected);
+				return $this->phpMailerSend();
+			}
+
+			// let us hope that we always come so far!
+			if (count($status['sent'])) {
+				return true;
+			}
+		}
+
+
+		return false;
+	}
+
+	/**
+	 *
+	 * @param $message
+	 */
+	private function writeToLog($message)
+	{
+		JLog::add($message, JLog::WARNING);
+	}
+
+	/**
+	 * @return string - the url to mailchimp api
+	 */
+	private function getMandrillUrl()
+	{
+
+		$scheme = 'http';
+
+		if ($this->params->get('secure')) {
+			$scheme = 'https';
+		}
+
+		$url = $scheme . '://mandrillapp.com/api/1.0';
+
+		return $url;
 	}
 
 }
