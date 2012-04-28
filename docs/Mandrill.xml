@@ -32,6 +32,22 @@
     </abstract>
   </bookinfo>
 
+  <article>
+    <para><revhistory>
+        <revision>
+          <revnumber>Revision 0.1</revnumber>
+
+          <date>28.04.2012</date>
+
+          <author>
+            <firstname>Daniel</firstname>
+
+            <surname>Dimitrov</surname>
+          </author>
+        </revision>
+      </revhistory></para>
+  </article>
+
   <chapter>
     <title>Introduction</title>
 
@@ -82,7 +98,7 @@
 
       <para>* All extensions that use the standard Joomla API for sending
       mails will continue to function as normal and the mails will be send
-      trough Joomla. If you are using extensions that have their own Mail
+      trough Mandrill. If you are using extensions that have their own Mail
       classes, then those extensions will continue to function as normal, but
       they won't use the Mandrill API</para>
     </section>
@@ -122,8 +138,8 @@
       <title>Updating to the latest version</title>
 
       <para>The plugin uses the standard update routine in Joomla. All you
-      need to do is to go Extensions -&gt; Extension Manager -&gt; Update in
-      your Joomla backend. Then click on "Find Updates" if a new version of
+      need to do is to go to Extensions -&gt; Extension Manager -&gt; Update
+      in your Joomla backend. Then click on "Find Updates" if a new version of
       the plugin is available you will be able to update by selecting it and
       clicking on the "Update" button</para>
     </section>
@@ -140,8 +156,8 @@
     <para><graphic fileref="images/config_screen.PNG" width="0"/></para>
 
     <para>In the API key field provide your Mandrill API key (on the day of
-    writing of that documentation the API key could be found by clicking on
-    the settings button (top right) the mandrillapp.com page (you need to be
+    writing that documentation the API key could be found by clicking on the
+    settings button (top right) at the mandrillapp.com page (you need to be
     logged in to see it))</para>
 
     <para>The use https option defines if the plugin should communicate with
@@ -187,9 +203,9 @@
     <section>
       <title>CC emails</title>
 
-      <para>If a Joomla extension tries to send and ads the CC option to the
-      mail, then the plugin will fallback to the standard JMailer class and
-      won't use the Mandrill API.</para>
+      <para>If a Joomla extension tries to send an email that has the CC
+      option set, then the plugin will fallback to the standard JMailer class
+      and won't use the Mandrill API.</para>
     </section>
 
     <section>
