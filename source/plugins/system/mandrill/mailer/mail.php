@@ -50,7 +50,7 @@ class JMail extends PHPMailer
 	{
 
 		$plugin = JPluginHelper::getPlugin('system', 'mandrill');
-		$this->params = new JParameter($plugin->params);
+		$this->params = new JRegistry($plugin->params);
 
 		$this->apiKey = $this->params->get('apiKey');
 
