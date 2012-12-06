@@ -577,7 +577,7 @@ class JMail extends PHPMailer
 			$mandrill->message['tags'][] = $input->get('view');
 		}
 		if ($input->get('task')) {
-			$mandrill->message['tags'][] = $input->get('option');
+			$mandrill->message['tags'][] = $input->get('task');
 		}
 
 		if (count($this->ReplyTo) > 0) {
@@ -644,14 +644,14 @@ class JMail extends PHPMailer
 
 		// queued mails??? Hm, maybe we've reached the API limit. Let us log this
 		if (isset($status['queue']) && count($status['queue'])) {
-			$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_QUEUED', imploded(',', $status['queue'])));
+			$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_QUEUED', implode(',', $status['queue'])));
 		}
 
 		// if we have rejected emails - try to send them with phpMailer
 		// not a perfect solution because we will return the result form phpMailer instead of the Mandrill
 		// but better to try to deliver agian than to fail to send the message
 		if (isset($status['rejected']) && count($status['rejected'])) {
-			$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_REJECTED',imploded(',', $status['rejected'])));
+			$this->writeToLog(JText::sprintf('PLG_MANDRILL_EMAIL_TO_REJECTED',implode(',', $status['rejected'])));
 			$this->ClearAddresses();
 			$this->addRecipient($status['rejected']);
 			return $this->phpMailerSend();
